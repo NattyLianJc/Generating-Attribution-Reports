@@ -1,0 +1,61 @@
+# 忽略 backup 文件夹
+backup/
+
+# 忽略 dataset 文件夹
+dataset/
+
+# 忽略根目录下所有 .err 和 .out 文件
+/*.err
+/*.out
+
+# 忽略根目录下所有 .json, .xlsx 和 .sh 文件
+/*.json
+/*.xlsx
+
+# 忽略 model-parameter 文件夹
+model_parameter/
+
+# 忽略 temp 文件夹
+temp/
+
+# 忽略 midtemp 文件夹
+midtemp/
+
+# 忽略 VS Code 项目文件夹
+.vscode/
+
+# 忽略 lavis 文件夹下的 output 文件夹
+lavis/output/
+
+# 忽略 __pycache__ 目录
+__pycache__/
+
+# 忽略 handle_caption 目录下的所有 .json 文件
+handle_caption/*.json
+
+# 忽略 handle_caption 目录下的test文件夹
+handle_caption/test/
+
+vit/output*/
+
+/.idea
+
+*.tar.gz
+
+classified_json_output/
+
+inference_results_from_classified_json/
+
+*mask*/
+
+slurm_output/
+*results.json
+
+MMTT_Upload_Staging/
+
+dff_now/
+
+certificate.pem
+
+# Legacy files
+legacy/

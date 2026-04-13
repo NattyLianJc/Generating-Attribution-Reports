@@ -1,0 +1,30 @@
+model:
+  arch: flant5xl
+  load_finetune: False
+  load_pretrained: True
+
+  pretrained: "model_parameter/instruct_blip_flanxl_trimmed.pth"
+  t5_model: "model_parameter/flant5xl"
+  
+  # Architecture
+  image_size: 224
+  drop_path_rate: 0
+  use_grad_checkpoint: False
+  vit_precision: "fp32"
+  freeze_vit: True
+  num_query_token: 32
+  prompt: ""
+
+preprocess:
+    vis_processor:
+        train:
+          name: "blip_image_train"
+          image_size: 224
+        eval:
+          name: "blip_image_eval"
+          image_size: 224
+    text_processor:
+        train:
+          name: "blip_caption"
+        eval:
+          name: "blip_caption"
