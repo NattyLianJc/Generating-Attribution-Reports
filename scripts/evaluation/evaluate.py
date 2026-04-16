@@ -1,6 +1,7 @@
 """
  Evaluation script for batched inference (Captions & Masks).
  Optimized for high-performance GPUs (e.g., H100/A100).
+ Now supports streaming output to JSONL for real-time validation.
 """
 
 import json
@@ -11,6 +12,11 @@ import torch
 from PIL import Image
 from tqdm import tqdm
 from torch.utils.data import Dataset, DataLoader
+import sys
+
+# Ensure the script can find the 'lavis' module from the root directory
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
 from lavis.models import load_model_and_preprocess
 
 class DeepFakeEvalDataset(Dataset):
@@ -66,8 +72,9 @@ def save_mask(mask_tensor, output_dir, relative_path, threshold=0.5):
 def main():
     parser = argparse.ArgumentParser(description="High-performance evaluation for BLIP-2.")
     parser.add_argument("--checkpoint", type=str, required=True, help="Path to the trained .pth file.")
-    parser.add_argument("--json_file", type=str, default="dataset/eval-mutilabel-simple.json")
-    parser.add_argument("--output_json", type=str, default="results/test_captions.json")
+    parser.add_argument("--json_file", type=str, default="dataset/test-mutilabel.json")
+    # Changed default extension to .jsonl
+    parser.add_argument("--output_file", type=str, default="results/test_captions.jsonl") 
     parser.add_argument("--output_mask_dir", type=str, default="results/test_masks")
     parser.add_argument("--image_dir", type=str, default="dataset")
     parser.add_argument("--batch_size", type=int, default=16)
@@ -87,7 +94,7 @@ def main():
     model.eval()
 
     # Load JSON data
-    with open(args.json_file, "r") as f:
+    with open(args.json_file, "r", encoding="utf-8") as f:
         data = json.load(f)
 
     # Initialize DataLoader for asynchronous CPU-to-GPU pipe
@@ -100,40 +107,43 @@ def main():
         pin_memory=True
     )
 
-    results = []
-    print(f"⚡ Processing {len(data)} samples...")
+    os.makedirs(os.path.dirname(args.output_file), exist_ok=True)
+    print(f"⚡ Processing {len(data)} samples... Streaming output to {args.output_file}")
 
-    for batch in tqdm(dataloader, desc="Inference"):
-        images = batch["image"].to(device, non_blocking=True)
-        image_ids = batch["image_id"]
-        rel_paths = batch["relative_path"]
+    # Open file in write mode before the loop
+    with open(args.output_file, "w", encoding="utf-8") as out_f:
+        for batch in tqdm(dataloader, desc="Inference"):
+            images = batch["image"].to(device, non_blocking=True)
+            image_ids = batch["image_id"]
+            rel_paths = batch["relative_path"]
 
-        with torch.no_grad():
-            # Crucial: return_seg=True enables mask generation
-            texts, masks = model.generate(
-                {"image": images},
-                use_nucleus_sampling=False,
-                num_beams=5,
-                max_length=100,
-                min_length=5,
-                return_seg=True
-            )
+            with torch.no_grad():
+                # Crucial: return_seg=True enables mask generation
+                texts, masks = model.generate(
+                    {"image": images},
+                    use_nucleus_sampling=False,
+                    num_beams=5,
+                    max_length=100,
+                    min_length=5,
+                    return_seg=True
+                )
 
-        # Iterate through batch results
-        for i in range(len(image_ids)):
-            save_mask(masks[i], args.output_mask_dir, rel_paths[i])
-            results.append({
-                "image_id": image_ids[i],
-                "img_path": rel_paths[i],
-                "caption": texts[i]
-            })
-
-    # Save final JSON results
-    os.makedirs(os.path.dirname(args.output_json), exist_ok=True)
-    with open(args.output_json, "w") as f:
-        json.dump(results, f, indent=4)
-    
-    print(f"✅ Finished. Output saved to {args.output_json}")
+            # Iterate through batch results and write to JSONL immediately
+            for i in range(len(image_ids)):
+                save_mask(masks[i], args.output_mask_dir, rel_paths[i])
+                
+                record = {
+                    "image_id": image_ids[i],
+                    "img_path": rel_paths[i],
+                    "caption": texts[i]
+                }
+                # Write as a single JSON line
+                out_f.write(json.dumps(record, ensure_ascii=False) + "\n")
+            
+            # Force write to disk so we can inspect the file while the script is running
+            out_f.flush()
+            
+    print(f"✅ Finished. Output successfully streamed to {args.output_file}")
 
 if __name__ == "__main__":
     main()
