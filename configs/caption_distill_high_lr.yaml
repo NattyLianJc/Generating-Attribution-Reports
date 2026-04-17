@@ -1,0 +1,79 @@
+ # Copyright (c) 2022, salesforce.com, inc.
+ # All rights reserved.
+ # SPDX-License-Identifier: BSD-3-Clause
+ # For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
+
+model:
+  arch: blip2_t5_instruct
+  model_type: flant5base  # 【修改这里】：把 flant5xl 改成 flant5base
+  # caption_coco_opt2.7b
+  load_finetuned: False
+  load_pretrained: False
+  # pretrained: "/home/lmj/lly/workspace/LAVIS-main/lavis/output/BLIP2/opt2/20231030051/checkpoint_3.pth"
+  use_grad_checkpoint: True
+  freeze_vit: True
+  qformer_text_input: True
+  num_classes: 21
+  multi_label_classifier_path: "model_parameter/ViT-H_14-add_cnn_branch_3_5-add_max_pool-21_class-weight_1_02-bce_focal_dice_jaccard_loss/Fakeface-ViT-H_14-add_cnn_branch_3_5-add_max_pool-21_class-weight_1_02-bce_focal_dice_jaccard_loss_checkpoint.bin"
+  bert_folder: "model_parameter/bert-base-uncased"
+
+datasets:
+  coco_caption: # name of the dataset builder
+    vis_processor:
+        train:
+          name: "blip2_image_train"
+          image_size: 224
+        eval:
+          name: "blip_image_eval"
+          image_size: 224
+    text_processor:
+        train:
+          name: "blip_caption"
+          prompt: ""
+          # "a photo of "
+        eval:
+          name: "blip_caption"
+    # build_info:
+    #     images:
+    #         storage: '/export/share/datasets/vision/coco/images/'
+
+run:
+  task: captioning
+  # ==========================================
+  # 核心引擎：优化器与学习率
+  # ==========================================
+  lr_sched: "linear_warmup_cosine_lr"
+  init_lr: 1e-4        # 【强力驱动】10倍学习率，冲破模态壁垒
+  min_lr: 1e-6         # 【完美收尾】留出微调绣花的空间
+  warmup_lr: 1e-6      # 【平稳起步】
+  warmup_steps: 1500   # 【缓冲加长】给高学习率留出适应期
+  weight_decay: 0.05
+  
+  # ==========================================
+  # 时间魔法：Epoch与吞吐量
+  # ==========================================
+  max_epoch: 100       # 【精准对齐】完美匹配 5 天的时长，让曲线完整降落
+  batch_size_train: 48 # 【榨干显存】填满 H100，速度翻倍
+  batch_size_eval: 32  # 【加速评测】
+  num_workers: 8       # 【满载IO】
+  accum_grad_iters: 1
+
+
+  max_len: 100
+  min_len: 5
+  num_beams: 5
+
+  seed: 42
+  output_dir: "output/instructBlip_student_lr1e4"
+  amp: True
+  resume_ckpt_path: null
+
+  evaluate: False
+  train_splits: ["train"]
+  valid_splits: ["val"]
+  test_splits: ["test"]
+
+  device: "cuda:0"
+  world_size: 1
+  dist_url: "env://"
+  distributed: False

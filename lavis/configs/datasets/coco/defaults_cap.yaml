@@ -1,0 +1,15 @@
+datasets:
+  coco_caption:
+    dataset_card: dataset_card/coco_caption.md
+    data_type: images
+
+    build_info:
+      annotations:
+        train:
+          storage: dataset/train-mutilabel.json
+        val:
+          storage: dataset/eval-mutilabel.json
+        test:
+          storage: dataset/test-mutilabel.json
+      images:
+        storage: dataset/
