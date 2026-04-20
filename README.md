@@ -3,6 +3,8 @@
 [](https://2026.aclweb.org/)
 [](https://opensource.org/licenses/BSD-3-Clause)
 
+This paper has been accepted by ACL 2026 (Main Conference)!
+
 This is the official implementation of the paper:
 
 **"Generating Attribution Reports for Manipulated Facial Images: A Dataset and Baseline"**
