@@ -3,7 +3,11 @@
 [](https://2026.aclweb.org/)
 [](https://opensource.org/licenses/BSD-3-Clause)
 
-**This paper has been accepted by ACL 2026 (Main Conference)!**
+---
+## 📢 News
+* **[2026/04]** 🎉 Our paper **"Generating Attribution Reports for Manipulated Facial Images: A Dataset and Baseline"** has been accepted to **ACL 2026 (Main Conference)**! 
+* **[2026/04]** Code and dataset (MMTT) are now publicly available.
+---
 
 This is the official implementation of the paper:
 
@@ -181,7 +185,6 @@ If you find our work or dataset useful, please cite our paper. *(Accepted to ACL
   title={Generating Attribution Reports for Manipulated Facial Images: A Dataset and Baseline},
   author={Lian, Jingchun and Liu, Lingyu and Wang, Yaxiong and Wu, Yujiao and Wu, Lianwei and Zhu, Li and Zheng, Zhedong},
   booktitle={Proceedings of the Annual Meeting of the Association for Computational Linguistics (ACL)},
-  year={2026},
-  note={To appear}
+  year={2026}
 }
 ```
